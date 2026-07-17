@@ -1,7 +1,7 @@
 scriptTitle = "Title Update Manager"
-scriptAuthor = "Swizzy, EccentricVamp, Yirr777, FDH"
+scriptAuthor = "Swizzy, EccentricVamp, Yirr777, FDH & Dan Marti"
 scriptVersion = 2
-scriptDescription = "Temporary fix for Aurora 0.7b2 and earlier: browse your installed games, download their Title Updates from XboxUnity, or update all of them at once to their latest Title Update. Also lets you enable/disable/mass-apply cached title updates. Works around the broken native TU hash check."
+scriptDescription = "Temporary fix for Aurora 0.7b2 and earlier: browse your installed games, download their Title Updates from XboxUnity, or update all of them at once to their latest Title Update. Also lets you enable/disable/mass-apply cached title updates, and free HDD space from title updates belonging to games you no longer have installed. Works around the broken native TU hash check."
 scriptIcon = "icon.png"
 scriptPermissions = { "http", "filesystem", "content", "sql" }
 
@@ -518,8 +518,120 @@ function InstallAllTitleUpdates()
 	end
 end
 
+-- Finds title updates registered for games that are no longer installed
+-- (TitleId missing from ContentItems) and offers to delete their backup and
+-- live files, freeing HDD space, then removes them from Aurora's database.
+function FreeMyDisk()
+	Script.SetStatus("Scanning for unused title updates...");
+	Script.SetProgress(0);
+
+	local matchingDrives = {};
+	for _, drive in ipairs(FileSystem.GetDrives(false)) do
+		matchingDrives[drive.Serial] = drive.MountPoint;
+	end
+
+	local rows = Sql.ExecuteFetchRows([[
+		SELECT tus.Id AS id, tus.DisplayName AS tu, tus.BackupPath AS backuppath,
+		       tus.LiveDeviceId AS livedeviceid, (tus.LivePath || tus.FileName) AS path
+		FROM TitleUpdates AS tus
+		WHERE tus.TitleId NOT IN (SELECT TitleId FROM ContentItems WHERE TitleId = tus.TitleId)
+		AND NOT tus.MediaId = 0
+	]]);
+
+	local totalSize = 0;
+	local tuIds = {};
+	local files = {};
+	local summaryLines = {};
+
+	if type(rows) == "table" then
+		for _, row in ipairs(rows) do
+			-- Fall back to "Hdd1:" if the drive serial isn't currently connected,
+			-- matching the original script's assumption.
+			local livePath = (matchingDrives[row.livedeviceid] or "Hdd1:") .. row.path;
+			local thisSize = 0;
+
+			if FileSystem.FileExists(row.backuppath) then
+				table.insert(files, row.backuppath);
+				thisSize = thisSize + (tonumber(FileSystem.GetFileSize(row.backuppath)) or 0);
+			end
+			if FileSystem.FileExists(livePath) then
+				table.insert(files, livePath);
+				thisSize = thisSize + (tonumber(FileSystem.GetFileSize(livePath)) or 0);
+			end
+
+			if thisSize > 0 then
+				table.insert(tuIds, row.id);
+				table.insert(summaryLines, "- " .. tostring(row.tu) .. " (" .. FormatSize(thisSize) .. ")");
+				totalSize = totalSize + thisSize;
+			end
+		end
+	end
+
+	if totalSize == 0 then
+		Script.ShowMessageBox("Free My Disk", "Good news! There are no unused title updates taking up space.", "OK");
+		return;
+	end
+
+	-- Loop mirrors the original script's flow: backing out of the "are you
+	-- sure" confirmation returns to the initial removal prompt.
+	while true do
+		local summary = string.format("Found %d unused title update(s) using %s:\n\n", #tuIds, FormatSize(totalSize));
+		local maxLines = 10;
+		for i, line in ipairs(summaryLines) do
+			if i > maxLines then
+				summary = summary .. string.format("...and %d more\n", #summaryLines - maxLines);
+				break;
+			end
+			summary = summary .. line .. "\n";
+		end
+		summary = summary .. "\nDo you want to remove them?";
+
+		local confirm = Script.ShowMessageBox("Free My Disk", summary, "Yes", "No");
+		if confirm.Button ~= 1 then
+			return;
+		end
+
+		local sure = Script.ShowMessageBox("Free My Disk", "These files will be permanently deleted.\n\nAre you sure you want to continue?", "Yes", "No");
+		if sure.Button == 1 then
+			break;
+		end
+	end
+
+	local total = #files;
+	local freedSize = 0;
+	local errors = 0;
+
+	for i, path in ipairs(files) do
+		Script.SetStatus(string.format("Deleting %d/%d...", i, total));
+		Script.SetProgress(math.floor((i - 1) / total * 100));
+		local size = tonumber(FileSystem.GetFileSize(path)) or 0;
+		if FileSystem.DeleteFile(path) == true then
+			freedSize = freedSize + size;
+		else
+			print("FreeMyDisk: failed to delete " .. tostring(path));
+			errors = errors + 1;
+		end
+	end
+
+	for _, id in ipairs(tuIds) do
+		if Sql.Execute("DELETE FROM TitleUpdates WHERE Id = " .. tostring(id)) ~= true then
+			print("FreeMyDisk: failed to remove TitleUpdates row Id=" .. tostring(id));
+			errors = errors + 1;
+		end
+	end
+
+	Script.SetStatus("Done!");
+	Script.SetProgress(100);
+
+	local msg = string.format("Freed %s across %d file(s) from %d title update(s).", FormatSize(freedSize), total, #tuIds);
+	if errors > 0 then
+		msg = msg .. "\n\nThere were " .. errors .. " error(s), check the log for details.";
+	end
+	Script.ShowMessageBox("Free My Disk", msg, "OK");
+end
+
 function HandleManageTitleUpdates()
-	local options = { "Enable Latest Updates", "Disable Latest Updates", "Mass Apply Latest Updates" };
+	local options = { "Enable Latest Updates", "Disable Latest Updates", "Mass Apply Latest Updates", "Free My Disk (Remove Unused TUs)" };
 	local pick = Script.ShowPopupList("Manage Cached Title Updates", "No options available", options);
 	if pick.Canceled then
 		return;
@@ -531,6 +643,8 @@ function HandleManageTitleUpdates()
 		DisableAllTitleUpdates();
 	elseif pick.Selected.Key == 3 then
 		InstallAllTitleUpdates();
+	elseif pick.Selected.Key == 4 then
+		FreeMyDisk();
 	end
 end
 

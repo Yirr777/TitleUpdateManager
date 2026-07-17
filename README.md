@@ -1,9 +1,10 @@
 # Title Update Manager
 
-An [Aurora](https://consolemods.org/wiki/Xbox_360:Aurora) Lua utility script for Xbox 360 that merges two previously separate community scripts into one:
+An [Aurora](https://consolemods.org/wiki/Xbox_360:Aurora) Lua utility script for Xbox 360 that merges three previously separate community scripts into one:
 
 - **Title Update Downloader** — browse your installed games and download their Title Updates straight from [XboxUnity](http://xboxunity.net/), or update every game at once to its latest Title Update.
 - **Title Update Enabler** — enable/disable the Title Updates Aurora already knows about, or permanently apply the currently-enabled ones out of Aurora's managed cache.
+- **Free My Disk** — find and delete Title Updates left behind for games you no longer have installed, freeing HDD space.
 
 It exists as a temporary workaround for Aurora 0.7b2 and earlier, whose native Title Update hash check is broken.
 
@@ -14,7 +15,8 @@ It exists as a temporary workaround for Aurora 0.7b2 and earlier, whose native T
 - **Manage Cached Title Updates**:
   - *Enable Latest Updates* — marks the highest-version Title Update per game as active.
   - *Disable Latest Updates* — deactivates all currently-enabled Title Updates.
-  - *Mass Apply Latest Updates* — permanently moves the active Title Updates out of Aurora's backup cache into their live location and removes them from Aurora's database. **This is irreversible** — only use it if you don't intend to keep managing Title Updates through Aurora.
+  - *Mass Apply Latest Updates* — permanently moves the active Title Updates out of Aurora's backup cache into their live location and removes them from Aurora's database. **This is irreversible** — only use it if you don't intend to keep managing Title Updates through Aurora. Note: since Aurora re-scans installed content, it will typically re-detect and re-back up the file on its own the next time it launches, so this rarely achieves a lasting "unmanaged" state.
+  - *Free My Disk (Remove Unused TUs)* — scans Aurora's database for Title Updates belonging to games that are no longer installed, shows how much space they're using, and deletes both the backup and live copies (plus their database entries) after two confirmations. **This is also irreversible.**
 
 ## Requirements
 
@@ -30,7 +32,7 @@ It exists as a temporary workaround for Aurora 0.7b2 and earlier, whose native T
 
 - Select a game from the list to browse and install a specific Title Update, exactly like the original downloader.
 - Select **`-- Update ALL Games (Latest Only) --`** to update every installed game to its newest Title Update in one pass.
-- Select **`-- Manage Cached Title Updates --`** to enable, disable, or permanently apply the Title Updates already registered in Aurora's database.
+- Select **`-- Manage Cached Title Updates --`** to enable, disable, permanently apply, or clean up unused Title Updates already registered in Aurora's database.
 
 After installing or applying updates, restart Aurora when prompted so the changes take effect, then enable the update from each game's own Title Updates menu if you used the download/update-all flow.
 
@@ -38,7 +40,8 @@ After installing or applying updates, restart Aurora when prompted so the change
 
 - **Swizzy & EccentricVamp** — original *Title Update Downloader*.
 - **FDH** — original *Title Update Enabler*.
-- **Yirr777** — merged both scripts into one, added the "Update ALL Games" batch flow, and redesigned the icon.
+- **Dan Martí** — original *Free My Disk*.
+- **Yirr777** — merged all three scripts into one, added the "Update ALL Games" batch flow, and redesigned the icon.
 
 ## License
 
