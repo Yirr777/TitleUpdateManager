@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.png" alt="Title Update Manager logo" width="160"></p>
+
 # Title Update Manager
 
 An [Aurora](https://consolemods.org/wiki/Xbox_360:Aurora) Lua utility script for Xbox 360 that merges three previously separate community scripts into one:
