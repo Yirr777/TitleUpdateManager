@@ -1,7 +1,7 @@
 scriptTitle = "Title Update Manager"
 scriptAuthor = "Swizzy, EccentricVamp, Yirr777, FDH & Dan Marti"
 scriptVersion = 2
-scriptDescription = "Temporary fix for Aurora 0.7b2 and earlier: browse your installed games, download their Title Updates from XboxUnity, or update all of them at once to their latest Title Update. Also lets you enable/disable/mass-apply cached title updates, and free HDD space from title updates belonging to games you no longer have installed. Works around the broken native TU hash check."
+scriptDescription = "A full alternative to Aurora's native Title Update handling: browse your installed games and download their Title Updates from XboxUnity, or update all of them at once to their latest version. Also lets you enable/disable/mass-apply cached title updates, and free HDD space from title updates belonging to games you no longer have installed. Also works around a broken native TU hash check present in Aurora 0.7b2 and earlier."
 scriptIcon = "icon.png"
 scriptPermissions = { "http", "filesystem", "content", "sql" }
 

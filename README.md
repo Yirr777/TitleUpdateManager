@@ -6,7 +6,7 @@ An [Aurora](https://consolemods.org/wiki/Xbox_360:Aurora) Lua utility script for
 - **Title Update Enabler** — enable/disable the Title Updates Aurora already knows about, or permanently apply the currently-enabled ones out of Aurora's managed cache.
 - **Free My Disk** — find and delete Title Updates left behind for games you no longer have installed, freeing HDD space.
 
-It exists as a temporary workaround for Aurora 0.7b2 and earlier, whose native Title Update hash check is broken.
+Together they form a full alternative to Aurora's native Title Update handling: downloading, batch-updating, enabling/disabling, and cleaning up after yourself, all from one script. It also works around a native Title Update hash-check bug present in Aurora 0.7b2 and earlier.
 
 ## Features
 
